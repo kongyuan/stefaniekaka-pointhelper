@@ -2,6 +2,7 @@ package tools.point.view
 {
 	import flash.display.NativeMenu;
 	import flash.display.NativeMenuItem;
+	import flash.desktop.NativeApplication;
 	import flash.events.Event;
 	import flash.ui.Keyboard;
 	import tools.point.events.MenuEvent;
@@ -17,6 +18,29 @@ package tools.point.view
 // Public Functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 		
+		/**
+		 * 生成菜单
+		 * @author Zhenyu Yao
+		 */
+		public static function generateMenu() : ToolWindowMenu
+		{
+			if (NativeApplication.supportsMenu) 
+			{
+				if (m_menu == null)
+				{
+					m_menu = new ToolWindowMenu();
+				}
+				
+				return m_menu;
+			}
+			else
+			{
+				return new ToolWindowMenu();
+			}
+		}
+		
+		private static var m_menu : ToolWindowMenu = null;
+
 		/**
 		 * 构造函数
 		 * @author Zhenyu Yao

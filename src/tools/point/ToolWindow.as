@@ -11,6 +11,7 @@ package tools.point
 	import flash.display.StageScaleMode;
 	import flash.display.StageQuality;
 	import flash.desktop.NativeApplication;
+	import flash.events.Event;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import tools.point.mediator.FileViewCommandMediator;
@@ -56,7 +57,7 @@ package tools.point
 			this.stage.frameRate = 60;
 			
 			// 生成菜单
-			m_menu = new ToolWindowMenu();
+			m_menu = ToolWindowMenu.generateMenu();
 			m_fileManager = new FileManager();
 			m_commandManager = new CommandManager();
 			
@@ -70,7 +71,8 @@ package tools.point
 			root.addChild(m_operationView);
 			m_pictureView.y += 32;
 			root.addChild(m_pictureView);
-			m_messageView.y += 412;
+			m_messageView.x = 6.18;
+			m_messageView.y += 400;
 			root.addChild(m_messageView);
 			
 			// 初始化各种中介者
@@ -84,19 +86,29 @@ package tools.point
 			{
 				this.menu = m_menu;
 			}
-			
-			if (NativeApplication.supportsMenu)
+			else if (NativeApplication.supportsMenu)
 			{
 				NativeApplication.nativeApplication.menu = m_menu;
 			}
 			
 			this.visible = true;
+			
+			this.addEventListener(Event.ACTIVATE, onActivateHandler);
 		}
 		
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Private vars
+// Private 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 		
+		/**
+		 * 激活窗口事件
+		 * @author Zhenyu Yao
+		 */
+		public function onActivateHandler(evt : Event) : void
+		{
+			m_menuMediator.resetMenuEventListener();
+		}
+
 		private var m_menu : ToolWindowMenu = null;
 		private var m_fileManager : FileManager = null;
 		private var m_commandManager : CommandManager = null;
@@ -110,10 +122,6 @@ package tools.point
 		private var m_displayMediator : DisplayMediator = null;
 		private var m_viewMenuMediator : ViewMenuMediator = null;
 		private var m_fileViewCommandMediator : FileViewCommandMediator = null;
-		
-		// test 
-		[Embed(source="../../../lib/test.jpg")]
-		private var TestBitmap : Class;
 	}
 
 }

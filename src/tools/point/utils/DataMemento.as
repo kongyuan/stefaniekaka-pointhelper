@@ -49,6 +49,20 @@ package tools.point.utils
 			bitmapData.setPixels(new Rectangle(0, 0, bitmapData.width, bitmapData.height), bytes);
 			data.bitmapData = bitmapData;
 			
+			// 读取锚点数据
+			if (dataXML.AnchorPoint[0] != null)
+			{
+				data.anchorPoint = new Point(dataXML.AnchorPoint[0].@x, dataXML.AnchorPoint[0].@y);
+				if (dataXML.AnchorPoint[0].@mode != null)
+				{
+					data.anchorMode = dataXML.AnchorPoint[0].@mode == "true";
+				}
+			}
+			else
+			{
+				data.anchorPoint = new Point(0.5, 0.5);
+			}
+			
 			// 读取列中点的数据
 			var rows : int = data.rows;
 			var cols : int = data.cols;
@@ -86,7 +100,7 @@ package tools.point.utils
 			
 			// 保存图片数据
 			var dataXML : XMLList = xml.Metadata;
-			var strContent : String = "<Content>{0}</Content>";
+			var strContent : String = "<Content>{0}</Content>\n";
 			var bytes : ByteArray = new ByteArray();
 			bytes.writeUnsignedInt(data.bitmapData.width);
 			bytes.writeUnsignedInt(data.bitmapData.height);
@@ -95,6 +109,11 @@ package tools.point.utils
 			var encodeString : String = Base64.encodeByteArray(bytes);
 			strContent = StringUtil.substitute(strContent, encodeString);
 			dataXML.appendChild(new XML(strContent));
+			
+			// 保存锚点信息
+			var strAnchorPoint : String = "<AnchorPoint x=\"{0}\" y=\"{1}\" mode=\"{2}\"/>\n";
+			strAnchorPoint = StringUtil.substitute(strAnchorPoint, data.anchorPoint.x, data.anchorPoint.y, data.anchorMode);
+			dataXML.appendChild(new XML(strAnchorPoint));
 			
 			// 装入行/列数据
 			for (var i : int = 0; i < data.rows; ++i)

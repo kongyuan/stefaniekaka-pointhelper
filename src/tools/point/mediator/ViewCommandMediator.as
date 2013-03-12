@@ -1,5 +1,6 @@
 package tools.point.mediator 
 {
+	import flash.events.Event;
 	import flash.geom.Point;
 	import tools.point.view.PictureView;
 	import tools.point.view.PrintMessageView;
@@ -10,7 +11,9 @@ package tools.point.mediator
 	import tools.point.events.GeneratePointsForGridsEvent;
 	import tools.point.events.ChangeDivideValueEvent;
 	import tools.point.events.ChangeRowAndColEvent;
+	import tools.point.events.ChangeAnchorModeEvent;
 	import tools.point.events.OperationEvent;
+	import tools.point.events.MoveAnchorPointEvent;
 	
 	/**
 	 * 视图与命令的中介者
@@ -39,8 +42,11 @@ package tools.point.mediator
 			m_pictureView.addEventListener(AddPointEvent.ADD_POINT, onAddPointHandler);
 			m_pictureView.addEventListener(AddImageEvent.ADD_IMAGE, onAddImageHandler);
 			m_pictureView.addEventListener(GeneratePointsForGridsEvent.GENERATE_POINTS_FOR_GRIDS, onGeneratePointsForGridsHandler);
+			m_pictureView.addEventListener(MoveAnchorPointEvent.MOVE_ANCHOR_POINT, onMoveAnchorPointHandler);
+			m_pictureView.addEventListener(MoveAnchorPointEvent.CONFIRM_ANCHOR_POINT, onMoveAnchorPointHandler);
 			m_messageView.addEventListener(ChangeRowAndColEvent.CHANGE_ROW_AND_COL, onChangeRowAndColHandler);
 			m_messageView.addEventListener(ChangeDivideValueEvent.CHANGE_DIVIDE_VALUE, onChangeDivideValueHandler);
+			m_messageView.addEventListener(ChangeAnchorModeEvent.CHANGE_ANCHOR_MODE, onChangeAnchorModeHandler);
 			m_commandManager.addEventListener(OperationEvent.UNDO, onOperationHandler);
 			m_commandManager.addEventListener(OperationEvent.REDO, onOperationHandler);
 		}
@@ -71,8 +77,8 @@ package tools.point.mediator
 		 */
 		private function onAddImageHandler(evt : AddImageEvent) : void
 		{
-			m_messageView.reset();
 			m_commandManager.addImage(evt.bitmapData);
+			m_messageView.printData(m_commandManager.currentMetadata);
 		}
 		
 		/**
@@ -83,6 +89,23 @@ package tools.point.mediator
 		private function onGeneratePointsForGridsHandler(evt : GeneratePointsForGridsEvent) : void
 		{
 			m_commandManager.addMetadata(evt.metadata);
+			m_messageView.printData(m_commandManager.currentMetadata);
+		}
+		
+		/**
+		 * 移动锚点事件
+		 * @param	evt MoveAnchorPointEvent 对象
+		 * @author Zhenyu Yao
+		 */
+		private function onMoveAnchorPointHandler(evt : MoveAnchorPointEvent) : void
+		{
+			if (evt.type == MoveAnchorPointEvent.CONFIRM_ANCHOR_POINT) 
+			{
+				var data : Metadata = m_commandManager.currentMetadata.copy();
+				m_commandManager.addMetadata(data);
+			}
+			
+			m_commandManager.currentMetadata.anchorPoint = evt.anchorPoint;
 			m_messageView.printData(m_commandManager.currentMetadata);
 		}
 		
@@ -110,6 +133,23 @@ package tools.point.mediator
 		{
 			if (m_commandManager.currentMetadata != null)
 			{
+				m_messageView.printData(m_commandManager.currentMetadata);
+			}
+		}
+		
+		/**
+		 * 改变 AnchorMode 事件
+		 * @param	evt ChangeAnchorModeEvent 对象
+		 * @author Zhenyu Yao
+		 */
+		private function onChangeAnchorModeHandler(evt : ChangeAnchorModeEvent) : void
+		{
+			if (m_pictureView.container != null) 
+			{
+				m_pictureView.anchorSprite.visible = evt.anchorMode;
+				m_commandManager.currentMetadata.anchorMode = evt.anchorMode;
+			
+				m_pictureView.updateAnchorPoint(m_commandManager.currentMetadata);
 				m_messageView.printData(m_commandManager.currentMetadata);
 			}
 		}

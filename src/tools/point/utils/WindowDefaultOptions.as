@@ -31,7 +31,7 @@ package tools.point.utils
 		 */
 		public static function get defaultWindowSize() : Point
 		{
-			return new Point(800, 600);
+			return new Point(1000, 720);
 		}
 		
 		/**

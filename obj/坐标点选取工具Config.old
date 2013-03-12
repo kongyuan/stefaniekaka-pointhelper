@@ -16,20 +16,20 @@
     </define>
     <define append="true">
       <name>CONFIG::timeStamp</name>
-      <value>'2012/11/16 星期五'</value>
+      <value>'2013/2/21 星期四'</value>
     </define>
     <verbose-stacktraces>true</verbose-stacktraces>
     <source-path append="true">
-      <path-element>E:\Code\坐标点选取工具\src</path-element>
+      <path-element>E:\Code\stefaniekaka-pointhelper\src</path-element>
       <path-element>D:\Program Files\FlashDevelop\Tools\flexlibs\4.6.0.23201B\frameworks\projects\framework\src</path-element>
       <path-element>D:\Program Files\FlashDevelop\Library\AS3\classes</path-element>
     </source-path>
     <library-path append="true">
-      <path-element>E:\Code\坐标点选取工具\lib\User Interface.swc</path-element>
+      <path-element>E:\Code\stefaniekaka-pointhelper\lib\User Interface.swc</path-element>
     </library-path>
   </compiler>
   <file-specs>
-    <path-element>E:\Code\坐标点选取工具\src\Main.as</path-element>
+    <path-element>E:\Code\stefaniekaka-pointhelper\src\Main.as</path-element>
   </file-specs>
   <default-background-color>#8080FF</default-background-color>
   <default-frame-rate>60</default-frame-rate>

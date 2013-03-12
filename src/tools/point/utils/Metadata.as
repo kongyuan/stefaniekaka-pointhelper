@@ -66,7 +66,59 @@ package tools.point.utils
 			// 每行的列数都是相同的
 			return m_points[0].length;
 		}
+		
+		/**
+		 * 锚点模式
+		 * @author ZhenyuYoa 
+		 */
+		public function set anchorMode(value : Boolean) : void
+		{
+			m_anchorMode = value;
+		}
+		
+		public function get anchorMode() : Boolean
+		{
+			return m_anchorMode;
+		}
+		
+		/**
+		 * 锚点
+		 */
+		public function get anchorPoint() : Point
+		{
+			if (m_anchorPoint == null) 
+			{
+				m_anchorPoint = new Point(0.5, 0.5);
+			}
+			
+			return m_anchorPoint;
+		}
 
+		public function set anchorPoint(value : Point) : void
+		{
+			if (value.x < 0) 
+			{
+				value.x = 0;
+			}
+			
+			if (value.x > 1)
+			{
+				value.x = 1;
+			}
+			
+			if (value.y < 0)
+			{
+				value.y = 0;
+			}
+			
+			if (value.y > 1)
+			{
+				value.y = 1;
+			}
+			
+			m_anchorPoint = value;
+		}
+		
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Public Functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,6 +211,8 @@ package tools.point.utils
 			var copyData : Metadata = new Metadata();
 			copyData.reset(rows, cols);
 			copyData.bitmapData = m_bitmapData != null ? m_bitmapData.clone() : null;
+			copyData.anchorPoint = m_anchorPoint;
+			copyData.anchorMode = m_anchorMode;
 			
 			for (var i : int = 0; i < rows; ++i)
 			{
@@ -229,6 +283,8 @@ package tools.point.utils
 
 		private var m_points : Vector.<Vector.<Vector.<Point>>> = null;
 		private var m_bitmapData : BitmapData = null;
+		private var m_anchorPoint : Point = null;
+		private var m_anchorMode : Boolean = false;
 	}
 
 }

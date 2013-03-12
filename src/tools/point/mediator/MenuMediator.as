@@ -33,13 +33,22 @@ package tools.point.mediator
 			m_fileManager = fileManager;
 			m_commandManager = commandManager;
 			
-			m_menu.addEventListener(MenuEvent.NEW, onNewHandler);
-			m_menu.addEventListener(MenuEvent.OPEN, onOpenHandler);
-			m_menu.addEventListener(MenuEvent.SAVE, onSaveHandler);
-			m_menu.addEventListener(MenuEvent.SAVE_AS, onSaveAsHandler);
-			m_menu.addEventListener(MenuEvent.UNDO, onUndoHandler);
-			m_menu.addEventListener(MenuEvent.REDO, onRedoHandler);
-			m_menu.addEventListener(MenuEvent.ABOUT, onAboutHandler);
+			resetMenuEventListener();
+		}
+		
+		/**
+		 * 重置菜单侦听器
+		 * @author Zhenyu Yao
+		 */
+		public function resetMenuEventListener() : void
+		{
+			addEventListenerForMenu(MenuEvent.NEW, onNewHandler);
+			addEventListenerForMenu(MenuEvent.OPEN, onOpenHandler);
+			addEventListenerForMenu(MenuEvent.SAVE, onSaveHandler);
+			addEventListenerForMenu(MenuEvent.SAVE_AS, onSaveAsHandler);
+			addEventListenerForMenu(MenuEvent.UNDO, onUndoHandler);
+			addEventListenerForMenu(MenuEvent.REDO, onRedoHandler);
+			addEventListenerForMenu(MenuEvent.ABOUT, onAboutHandler);
 		}
 		
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -121,6 +130,21 @@ package tools.point.mediator
 		{
 			var url : URLRequest = new URLRequest("http://t.qq.com/stefanie_kaka");
 			navigateToURL(url, "_blank");
+		}
+		
+		/**
+		 * 为菜单添加事件侦听器
+		 * @param	type 事件类型
+		 * @param	listener 侦听器
+		 * @author Zhenyu Yao
+		 */
+		private function addEventListenerForMenu(type : String, listener : Function) : void
+		{
+			if (m_menu.hasEventListener(type))
+			{
+				m_menu.removeEventListener(type, listener);
+			}
+			m_menu.addEventListener(type, listener);
 		}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

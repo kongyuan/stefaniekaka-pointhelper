@@ -12,16 +12,17 @@ package tools.point.view
 	import flash.filesystem.File;
 	import flash.geom.Point;
 	import flash.events.MouseEvent;
+	import flash.geom.Rectangle;
 	import flash.net.URLRequest;
-	import flash.ui.Mouse;
-	import flash.ui.MouseCursor;
-	import tools.point.events.AddImageEvent;
-	import tools.point.events.GeneratePointsForGridsEvent;
-	import tools.point.utils.Metadata;
-	import tools.point.utils.WindowDefaultOptions;
-	import tools.point.events.AddPointEvent;
 	import flash.desktop.ClipboardFormats;
 	import flash.desktop.NativeDragManager;
+	
+	import tools.point.events.AddImageEvent;
+	import tools.point.events.GeneratePointsForGridsEvent;
+	import tools.point.events.AddPointEvent;
+	import tools.point.events.MoveAnchorPointEvent;
+	import tools.point.utils.Metadata;
+	import tools.point.utils.WindowDefaultOptions;
 	
 	/**
 	 * 图片视图
@@ -65,6 +66,15 @@ package tools.point.view
 		{
 			return m_picture;
 		}
+		
+		/**
+		 * 锚点显示对象
+		 * @author Zhenyu Yao
+		 */
+		public function get anchorSprite() : AnchorPointSprite
+		{
+			return m_anchorSprite;
+		}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Public Functions
@@ -79,7 +89,7 @@ package tools.point.view
 			m_background = new Sprite();
 			m_background.graphics.beginFill(0xbfbfbf);
 			m_frameSize = WindowDefaultOptions.defaultWindowSize;
-			m_frameSize.y *= 0.618;
+			m_frameSize.y *= 0.5;
 			m_background.graphics.drawRect(0, 0, m_frameSize.x, m_frameSize.y);
 			m_background.graphics.endFill();
 			this.addChild(m_background);
@@ -179,6 +189,23 @@ package tools.point.view
 						addPointToCell(new Point(p.x, -p.y), i, j);
 					}
 				}
+			}
+			
+			updateAnchorPoint(data);
+		}
+		
+		/**
+		 * 更新锚点的位置
+		 * @param	data 原数据
+		 * @author Zhenyu Yao
+		 */
+		public function updateAnchorPoint(data : Metadata) : void
+		{
+			m_anchorSprite.visible = data.anchorMode;
+			if (data.anchorMode)
+			{
+				m_anchorSprite.x = m_picture.x + data.anchorPoint.x * data.bitmapData.width;
+				m_anchorSprite.y = m_picture.y + data.bitmapData.height - data.anchorPoint.y * data.bitmapData.height;
 			}
 		}
 		
@@ -312,6 +339,11 @@ package tools.point.view
 			var row : int = (local.y - m_picture.y) / m_cellHeight;
 			var col : int = (local.x - m_picture.x) / m_cellWidth;
 			
+			if (row >= m_cellContainers.length || col >= m_cellContainers[0].length)
+			{
+				return;
+			}
+			
 			// 得到当前点击所属网格的中心点
 			var cellSprite : CellSprite = m_cellContainers[row][col];
 			var localCenter : Point = new Point(cellSprite.x, cellSprite.y);
@@ -329,20 +361,80 @@ package tools.point.view
 		{
 			if (!m_editMode && m_container != null)
 			{
-				m_container.startDrag(false);
+				if (!m_anchorSprite.visible)
+				{
+					m_container.startDrag(false);
+				}
+				else
+				{
+					var rect : Rectangle = m_anchorSprite.getRect(m_anchorSprite);
+					if (rect.contains(m_anchorSprite.mouseX, m_anchorSprite.mouseY))
+					{
+						m_anchorSprite.startDrag(false, m_picture.getRect(m_container));
+						
+						var anchorPoint : Point = calculateAnchorPoint();
+						var tmpEvt : MoveAnchorPointEvent = new MoveAnchorPointEvent(MoveAnchorPointEvent.CONFIRM_ANCHOR_POINT, anchorPoint); 
+						this.dispatchEvent(tmpEvt);
+					}
+				}
 			}
 		}
 		
 		/**
-		 * 装载图片的容器内鼠标抬起事件
-		 * @param	evt 鼠标事件对象
+		 * 鼠标抬起事件
+		 * @param	evt MouseEvent 对象
 		 * @author Zhenyu Yao
 		 */
 		private function onMouseUpHandler(evt : MouseEvent) : void
 		{
-			if (m_container != null)
+			m_container.stopDrag();
+			m_anchorSprite.stopDrag();
+		}
+		
+		/**
+		 * 每一帧更新
+		 * @param	evt Event 对象
+		 * @author Zhenyu Yao
+		 */
+		private function onEnterFrameHandler(evt : Event) : void
+		{
+			if (m_anchorSprite != null && m_anchorSprite.moving)
 			{
-				m_container.stopDrag();
+				var mousePosition : Point = new Point(m_container.mouseX, m_container.mouseY);
+				var edge : uint = 0;
+				
+				if (mousePosition.x < m_picture.x)
+				{
+					mousePosition.x = m_picture.x;
+					edge = 0x01;
+				}
+				else if (mousePosition.x > m_picture.x + m_picture.bitmapData.width)
+				{
+					mousePosition.x = m_picture.x + m_picture.bitmapData.width;
+					edge = 0x01;
+				}
+				
+				if (mousePosition.y < m_picture.y)
+				{
+					mousePosition.y = m_picture.y;
+					edge |= 0x02;
+				}
+				else if (mousePosition.y > m_picture.y + m_picture.bitmapData.height)
+				{
+					mousePosition.y = m_picture.y + m_picture.bitmapData.height;
+					edge |= 0x02;
+				}
+				
+				if (edge == 0x03)
+				{
+					m_anchorSprite.stopDrag();
+					m_anchorSprite.x = mousePosition.x;
+					m_anchorSprite.y = mousePosition.y;
+				}
+				
+				var anchorPoint : Point = calculateAnchorPoint();
+				var tmpEvt : MoveAnchorPointEvent = new MoveAnchorPointEvent(MoveAnchorPointEvent.MOVE_ANCHOR_POINT, anchorPoint);
+				this.dispatchEvent(tmpEvt);
 			}
 		}
 		
@@ -383,8 +475,13 @@ package tools.point.view
 			m_container.addEventListener(MouseEvent.CLICK, onMouseClickHandler);
 			m_container.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDownHandler);
 			m_container.addEventListener(MouseEvent.MOUSE_UP, onMouseUpHandler);
+			m_container.addEventListener(Event.ENTER_FRAME, onEnterFrameHandler);
 			
 			resetRowAndCol(1, 1);
+			
+			m_anchorSprite = new AnchorPointSprite();
+			m_anchorSprite.visible = false;
+			m_container.addChild(m_anchorSprite);
 		}
 
 		/**
@@ -407,6 +504,19 @@ package tools.point.view
 			return false;
 		}
 		
+		/**
+		 * 计算锚点
+		 * @return Point 对象
+		 * @author Zhenyu Yao
+		 */
+		private function calculateAnchorPoint() : Point
+		{
+			var anchorPoint : Point = new Point(int(m_anchorSprite.x - m_picture.x) / m_picture.bitmapData.width, 
+												int(m_anchorSprite.y - m_picture.y) / m_picture.bitmapData.height);
+			anchorPoint.y = 1.0 - anchorPoint.y;
+			return anchorPoint;
+		}
+		
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Private vars
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -419,6 +529,7 @@ package tools.point.view
 		private var m_cellHeight : Number = 0.0;
 		private var m_cellContainers : Vector.<Vector.<CellSprite>> = null;
 		private var m_editMode : Boolean = false;
+		private var m_anchorSprite : AnchorPointSprite = null;
 	}
 
 }
